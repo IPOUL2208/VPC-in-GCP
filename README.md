@@ -1,26 +1,26 @@
-# GCP VPC Architecture with NAT, Peering & WordPress
+# GCP Secure Multi-VPC Architecture with NAT & WordPress
 
-This project demonstrates a **real-world Google Cloud Platform (GCP) network architecture** using **Auto VPC, Custom VPC, firewall rules, VPC peering, Cloud NAT**, and a **public WordPress deployment**.
+This project demonstrates a **production-style Google Cloud Platform (GCP) network architecture** designed with **security, scalability, and best practices** in mind.
 
 ---
 
 ##  Architecture Overview
 
-### VPCs
-- **Dev VPC (Auto Mode)**  
-  - Name: `dev-auto-vpc`
-  - 1 VM instance
+### VPC Design
+- **Dev Environment**
+  - Auto Mode VPC: `dev-auto-vpc`
+  - 1 VM (`dev-vm-1`)
 
-- **Prod VPC (Custom Mode)**  
-  - Name: `prod-vpc`
+- **Prod Environment**
+  - Custom Mode VPC: `prod-vpc`
   - Subnets:
-    - `web-sub` → Web servers
-    - `db-sub` → Database server
-    - `util-sub` → Utility server
+    - `web-sub` (Web servers)
+    - `db-sub` (Database)
+    - `util-sub` (Utility / Admin)
 
 ---
 
-##  VM Instances
+##  Compute Resources
 
 ### Dev
 - `dev-vm-1`
@@ -32,51 +32,67 @@ This project demonstrates a **real-world Google Cloud Platform (GCP) network arc
 
 ---
 
-##  Tasks Implemented
+## 🔹 Tasks Implemented
 
-### ✅ Task 1: Internal Communication (Prod VPC)
-- All prod VMs can ping each other using **ICMP firewall rule**
+###  1. Internal Communication (Prod)
+- All prod VMs communicate internally using **ICMP firewall rules**
 
-### ✅ Task 2: Secure Dev ↔ Prod Connectivity
-- **VPC Peering** between dev and prod
-- SSH access from `util-vm` to `dev-vm`
+###  2. Secure Dev ↔ Prod Connectivity
+- **VPC Peering** between Dev and Prod
+- SSH allowed only from `util-vm` to `dev-vm`
 - Secure file transfer using `scp`
 
-### ✅ Task 3: Public WordPress Deployment
+###  3. Public WordPress Deployment
 - WordPress installed on Web VM
-- HTTP/HTTPS access allowed via firewall
-- Accessible from public internet
+- HTTP/HTTPS firewall rules configured
+- Accessible from the public internet
 
-### ✅ Task 4: Secure Internet Access using NAT
+###  4. Secure Internet Access using Cloud NAT
 - Removed external IPs from private VMs
 - Configured **Cloud Router + Cloud NAT**
-- Private VMs get outbound internet only
+- Private VMs have outbound internet access only
 
 ---
 
-## Security Best Practices Used
-- Least-privilege firewall rules
+##  Security Best Practices
 - No external IPs for private workloads
-- NAT for outbound access
-- Network segmentation using subnets
+- Least-privilege firewall rules
+- Network segmentation via subnets
+- NAT for outbound-only internet access
 
 ---
 
-##  Tools & Services Used
+##  Tools & Technologies
 - Google Cloud VPC
 - Compute Engine
-- Cloud NAT
-- Cloud Router
+- Cloud NAT & Cloud Router
 - Firewall Rules
 - Apache, PHP, WordPress
+- Linux (Debian)
 
 ---
 
-## Outcome
-A secure, scalable, production-ready GCP network architecture following cloud best practices.
+##  Outcome
+A secure, scalable, and production-ready GCP infrastructure that mirrors real-world enterprise environments.
 
 ---
+
 
 ###  Author
 **Indresh Pal**  
 Cloud / DevOps Engineer  
+
+
+## Using Terraform and GCLOUD CLI
+
+resource "google_compute_network" "prod_vpc" {
+  name                    = "prod-vpc"
+  auto_create_subnetworks = false
+}
+
+resource "google_compute_subnetwork" "web_sub" {
+  name          = "web-sub"
+  region        = "us-central1"
+  network       = google_compute_network.prod_vpc.id
+  ip_cidr_range = "10.10.1.0/24"
+}
